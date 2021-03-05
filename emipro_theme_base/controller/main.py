@@ -219,10 +219,18 @@ class emiproThemeBaseExtended(WebsiteSaleWishlist):
         attrib_set = {v[1] for v in attrib_values}
         domain_ept = self._get_search_domain(search, category, attrib_values)
         products_ept = request.env['product.template'].search(domain_ept)
+        # if products_ept:
+        #     brands_ept = request.env['product.brand.ept'].search([('product_ids', 'in', products_ept.ids)])
+        #     if brands_ept:
+        #         res.qcontext.update({'brands_ept': brands_ept})
         if products_ept:
-            brands_ept = request.env['product.brand.ept'].search([('product_ids', 'in', products_ept.ids)])
-            if brands_ept:
-                res.qcontext.update({'brands_ept': brands_ept})
+            brands_ept = False
+            if hasattr(request.website, '_get_brands'):
+                brands_ept = set(products_ept.mapped('product_brand_ept_id')).intersection(request.website._get_brands())
+            else:
+                brands_ept = request.env['product.brand.ept'].search([('product_ids', 'in', products_ept.ids)])
+        if brands_ept:
+            res.qcontext.update({'brands_ept': brands_ept})
 
         if cust_max_val and cust_min_val:
             try:
